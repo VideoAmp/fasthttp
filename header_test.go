@@ -2842,6 +2842,13 @@ func TestRequestHeaderReadSuccess(t *testing.T) {
 		t.Fatalf("unexpected connection: close header")
 	}
 
+	// lax-fasthttp: request with raw spaces and parenthesis in the URI query params, which we permit for dirty reasons
+	testRequestHeaderReadSuccess(t, h, "GET /foo/bar?key=v a l ( ) u e HTTP/1.1\r\nHost: google.com\r\n\r\n",
+		-2, "/foo/bar?key=v a l ( ) u e", "google.com", "", "")
+	if h.ConnectionClose() {
+		t.Fatalf("unexpected connection: close header")
+	}
+
 	// simple headers with body
 	testRequestHeaderReadSuccess(t, h, "GET /a/bar HTTP/1.1\r\nHost: gole.com\r\nconneCTION: close\r\n\r\nfoobar",
 		-2, "/a/bar", "gole.com", "", "")
@@ -2931,8 +2938,8 @@ func TestRequestHeaderReadSuccess(t *testing.T) {
 	testRequestHeaderReadSuccess(t, h, "\r\n\n\r\nGET /aaa HTTP/1.1\r\nHost: aaa.com\r\n\r\nsss",
 		-2, "/aaa", "aaa.com", "", "")
 
-	// request uri with spaces - should be rejected per RFC 9112
-	testRequestHeaderReadError(t, h, "GET /foo/ bar baz HTTP/1.1\r\nHost: aa.com\r\n\r\nxxx")
+	// lax-fasthttp: request uri with spaces - should be rejected per RFC 9112, but we're lax here
+	// testRequestHeaderReadError(t, h, "GET /foo/ bar baz HTTP/1.1\r\nHost: aa.com\r\n\r\nxxx")
 
 	// no host
 	testRequestHeaderReadSuccess(t, h, "GET /foo/bar HTTP/1.1\r\nFOObar: assdfd\r\n\r\naaa",
